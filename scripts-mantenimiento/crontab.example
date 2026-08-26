@@ -1,0 +1,5 @@
+# Cada noche: espacio, servicios, vacuum de journal.
+# crontab -u admin -e
+15 4 * * * /home/admin/scripts-mantenimiento/control-espacio.sh 85 >> /home/admin/cron-espacio.log 2>&1
+20 4 * * * /home/admin/scripts-mantenimiento/healthcheck-servicios.sh >> /home/admin/cron-health.log 2>&1
+30 4 * * * sudo /home/admin/scripts-mantenimiento/rotar-logs.sh

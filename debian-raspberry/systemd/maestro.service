@@ -1,0 +1,17 @@
+[Unit]
+Description=Bot Maestro de Control (panel Telegram Raspberry Pi)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=admin
+WorkingDirectory=/home/admin
+ExecStart=/usr/bin/python3 /home/admin/maestro.py
+Restart=always
+RestartSec=10
+# Evita arrancar antes de que la red esté lista (post-reboot)
+TimeoutStartSec=120
+
+[Install]
+WantedBy=multi-user.target

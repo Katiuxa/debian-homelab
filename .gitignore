@@ -1,0 +1,12 @@
+﻿.env
+.env.*
+!.env.example
+*.pem
+*.key
+id_rsa
+id_ed25519*
+__pycache__/
+*.py[cod]
+*.log
+pi_services.json
+!pi_services.example.json

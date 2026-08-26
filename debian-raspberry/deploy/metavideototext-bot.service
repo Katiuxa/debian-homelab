@@ -1,0 +1,29 @@
+# Servicio systemd — bot siempre activo en Raspberry Pi
+#
+# 1) Edita User, WorkingDirectory y rutas si hace falta
+# 2) sudo cp deploy/metavideototext-bot.service /etc/systemd/system/
+# 3) sudo systemctl daemon-reload
+# 4) sudo systemctl enable --now metavideototext-bot.service
+# 5) sudo systemctl status metavideototext-bot.service
+# Logs: journalctl -u metavideototext-bot -f
+
+[Unit]
+Description=MetavideoToText Telegram bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=admin
+Group=admin
+WorkingDirectory=/home/admin/MetavideoToText_bot
+Environment=PYTHONUNBUFFERED=1
+Environment=PATH=/home/admin/.deno/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/home/admin/MetavideoToText_bot/.venv/bin/python /home/admin/MetavideoToText_bot/run.py
+Restart=on-failure
+RestartSec=15
+# Evita dos instancias con el mismo token de Telegram
+ExecStartPre=/bin/bash -c 'test ! -f /home/admin/MetavideoToText_bot/.bot.pid || pkill -f "MetavideoToText_bot/run.py" || true'
+
+[Install]
+WantedBy=multi-user.target

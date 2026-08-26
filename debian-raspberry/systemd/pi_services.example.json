@@ -1,0 +1,21 @@
+﻿{
+  "host": "RASPBERRY_LAN_IP",
+  "user": "admin",
+  "password": "",
+  "ssh_alias": "pi-bot",
+  "owner_ips": [],
+  "owner_telegram_ids": [],
+  "log_since_hours": 6,
+  "log_lines_per_service": 1200,
+  "services": [
+    {"unit": "metavideototext-bot", "label": "MetavideoToText"},
+    {"unit": "videodownloader-bot", "label": "VideoDownloader"},
+    {"unit": "botdescargador", "label": "Meta Downloader"},
+    {"unit": "botconversor", "label": "Bot Conversor"},
+    {"unit": "botmail", "label": "BotMail"},
+    {"unit": "bot_ebooks", "label": "Bot Ebooks"},
+    {"unit": "mi_bot", "label": "Bot Noticias"},
+    {"unit": "maestro", "label": "Maestro"},
+    {"unit": "filebrowser", "label": "Filebrowser"}
+  ]
+}
