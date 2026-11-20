@@ -1,52 +1,52 @@
-# Home Lab y administración de servidor (Raspberry Pi)
+# Home lab and server administration (Raspberry Pi)
 
-Configuración, administración y mantenimiento de un servidor doméstico 24/7 sobre una Raspberry Pi 3 Model B (Debian).
+Configuration, administration, and maintenance of a 24/7 home server on a Raspberry Pi 3 Model B (Debian).
 
-El objetivo es mantener servicios continuos (bots de automatización y servidor de archivos) en hardware muy limitado (1 GB de RAM): optimización de memoria, monitorización y acceso remoto.
+The goal is to keep continuous services (automation bots and a file server) running on very limited hardware (1 GB of RAM): memory tuning, monitoring, and remote access.
 
-## Hardware y stack
+## Hardware and stack
 
-- Hardware: Raspberry Pi 3 Model B (1 GB RAM), reciclada de un DreamPi.
-- Sistema: Debian (Linux), usuario `admin`.
-- Almacenamiento: MicroSD 128 GB (sistema; antes 8 GB) y USB Kingston 128 GB (datos, montado en `/media/admin/KINGSTON`).
-- Acceso remoto: SSH, TigerVNC y Tailscale.
-- Servicios: systemd y scripts en Bash.
-- Disco en red: File Browser por HTTP en la LAN.
+- Hardware: Raspberry Pi 3 Model B (1 GB RAM), reused from a DreamPi.
+- System: Debian (Linux), user `admin`.
+- Storage: 128 GB MicroSD (system; previously 8 GB) and a 128 GB Kingston USB drive (data, mounted at `/media/admin/KINGSTON`).
+- Remote access: SSH, TigerVNC, and Tailscale.
+- Services: systemd and Bash scripts.
+- Network disk: File Browser over HTTP on the LAN.
 
-Todos los bots y File Browser están activos a la vez en esa RAM.
+Every bot and File Browser run at the same time in that RAM.
 
-## Arquitectura y recursos
+## Architecture and resources
 
-La limitación principal es correr a la vez varios procesos Python, conversiones con `ebook-convert` (Calibre) y ffmpeg en 1 GB. No hay modelo de lenguaje local: 1 GB no da. Lo pesado de texto se manda a la API de Groq (repo [Telegram-Bots-Suite](https://github.com/Katiuxa/Telegram-Bots-Suite)).
+The main constraint is running several Python processes, `ebook-convert` (Calibre) conversions, and ffmpeg at once inside 1 GB. There is no local language model: 1 GB is not enough. Heavy text work is sent to the Groq API (repo [Telegram-Bots-Suite](https://github.com/Katiuxa/Telegram-Bots-Suite)).
 
-### Memoria (zRAM)
+### Memory (zRAM)
 
-El swap en la MicroSD desgastaba la tarjeta y era lento, sobre todo con la SD de 8 GB. Se sustituyó por zRAM (compresión en RAM, algoritmo lz4, hasta ~50 % de la RAM). Sigue teniendo sentido con 1 GB aunque la SD sea ahora de 128 GB: el cuello es la memoria, no el tamaño del disco.
+Swap on the MicroSD wore the card out and was slow, especially on the 8 GB SD. It was replaced with zRAM (compression in RAM, lz4, up to about 50% of RAM). It still makes sense with 1 GB even though the SD is now 128 GB: the bottleneck is memory, not disk size.
 
 ```bash
 sudo bash scripts-mantenimiento/zram-enable.sh
 bash scripts-mantenimiento/zram-status.sh
 ```
 
-### Almacenamiento
+### Storage
 
-- **tmpfs / `/tmp`:** las conversiones pesadas no se dejan en la MicroSD. Con 1 GB hay que vigilar que Calibre no deje basura en RAM.
-- **USB y catálogo:** la colección de epubs no cabía en 128 GB. Se recortó el árbol de ficheros y se regeneró `biblioteca.db` solo con lo que quedó (`ajustar_biblioteca_usb.py` en Telegram-Bots-Suite).
-- **Umbral de disco:**
+- **tmpfs / `/tmp`:** heavy conversions are not left on the MicroSD. With 1 GB, watch that Calibre does not leave junk in RAM.
+- **USB and catalog:** the EPUB collection did not fit in 128 GB. The file tree was trimmed and `biblioteca.db` was regenerated with only what remained (`ajustar_biblioteca_usb.py` in Telegram-Bots-Suite).
+- **Disk threshold:**
 
 ```bash
 bash scripts-mantenimiento/control-espacio.sh 85
 ```
 
-## Servicios y operación
+## Services and operation
 
-Los bots y File Browser van como unidades systemd. Detalle de montajes, VNC y unidades: [debian-raspberry/ADMINISTRACION.md](debian-raspberry/ADMINISTRACION.md).
+The bots and File Browser run as systemd units. Mounts, VNC, and units are detailed in [debian-raspberry/ADMINISTRACION.md](debian-raspberry/ADMINISTRACION.md).
 
-### Panel maestro
+### Master panel
 
-`debian-raspberry/panel-maestro/maestro.py` es un bot de Telegram para incidencias sin SSH constante: estado, arranque y reinicio de unidades systemd desde un chat autorizado. Token y sudo por variables de entorno (`TELEGRAM_BOT_TOKEN`, `MAESTRO_SUDO_PASS`). No van en el código.
+`debian-raspberry/panel-maestro/maestro.py` is a Telegram bot for incidents when you do not want to stay on SSH: status, start, and restart of systemd units from an authorized chat. The token and sudo password come from environment variables (`TELEGRAM_BOT_TOKEN`, `MAESTRO_SUDO_PASS`). They are not in the code.
 
-### Mantenimiento y copias
+### Maintenance and backups
 
 ```bash
 bash scripts-mantenimiento/healthcheck-servicios.sh
@@ -54,12 +54,12 @@ sudo bash scripts-mantenimiento/rotar-logs.sh
 bash scripts-mantenimiento/backup-rsync.sh /media/admin/KINGSTON/backups
 ```
 
-- `healthcheck-servicios.sh` — estado UP/DOWN de los procesos críticos.
-- `rotar-logs.sh` — recorte de logs para no saturar disco.
-- `backup-rsync.sh` — copia incremental de código y config (sin `.env` ni bases) al USB.
+- `healthcheck-servicios.sh` — UP/DOWN status of the critical processes.
+- `rotar-logs.sh` — trims logs so they do not fill the disk.
+- `backup-rsync.sh` — incremental copy of code and config (no `.env` files and no databases) to the USB drive.
 
-No hay un cron de imagen de la SD que se ejecute solo. En el PC Windows hay copias `.img` hechas a mano.
+There is no cron job that images the SD card by itself. On the Windows PC there are `.img` copies made by hand.
 
-## Qué cubre
+## What this covers
 
-Diagnóstico en hardware justo, systemd, zRAM, espacio en SD/USB/tmpfs, SSH/VNC, y no fingir capacidad que 1 GB no tiene.
+Diagnosis on tight hardware, systemd, zRAM, free space on the SD card, the USB drive, and tmpfs, SSH/VNC, and not pretending that 1 GB can do more than it can.

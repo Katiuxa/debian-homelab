@@ -1,47 +1,47 @@
-# Administración de la Raspberry Pi 3B
+# Raspberry Pi 3B administration
 
-Hostname/usuario típicos: Debian, usuario `admin`. IP de LAN por DHCP (no publicar la IP pública).
+Typical hostname and user: Debian, user `admin`. LAN address comes from DHCP (do not publish the public IP).
 
-## Acceso
+## Access
 
 ```bash
 ssh admin@raspberrypi.local
 ```
 
-Escritorio: **TigerVNC** (servidor en la Pi, visor en el PC). SSH cubre consola y copias; VNC cuando hace falta GUI (File Browser, comprobaciones puntuales).
+Desktop: **TigerVNC** (server on the Pi, viewer on the PC). SSH covers the console and file copies. VNC is for when a GUI is needed (File Browser, one-off checks).
 
-Claves SSH en el PC (`id_ed25519_*`). La contraseña no va en los scripts del repo: `PI_SSH_PASSWORD` / `PI_HOST` en el entorno.
+SSH keys live on the PC (`id_ed25519_*`). The password is not in the repo scripts: `PI_SSH_PASSWORD` / `PI_HOST` come from the environment.
 
-## Unidades systemd (todas a la vez)
+## systemd units (all at once)
 
-| Unidad | Función |
+| Unit | Role |
 |---|---|
-| `maestro.service` | Panel Telegram: restart de servicios |
+| `maestro.service` | Telegram panel: restart services |
 | `metavideototext-bot.service` | Meta Media to Text |
 | `botconversor.service` | Calibre (EPUB/PDF/…) |
-| `botdescargador.service` | Descarga de vídeo |
-| `bot_ebooks.service` | Catálogo SQLite en USB |
-| `botmail.service` | Cuentas mail.tm |
-| `mi_bot.service` | OnlyNoticias |
-| `videodownloader-bot.service` | X / vídeo |
-| `filebrowser.service` | Disco en red (HTTP) |
+| `botdescargador.service` | Video download |
+| `bot_ebooks.service` | SQLite catalog on the USB drive |
+| `botmail.service` | mail.tm accounts |
+| `mi_bot.service` | OnlyNews |
+| `videodownloader-bot.service` | X / video |
+| `filebrowser.service` | Network disk (HTTP) |
 
 ```bash
 systemctl status metavideototext-bot
 journalctl -u bot_ebooks -n 80 --no-pager
 ```
 
-El maestro no reinicia a ciegas: evita cortar un envío si hay trabajo en el directorio temp del servicio.
+The master panel does not restart blindly: it avoids cutting off a send while there is work in that service's temp directory.
 
-## Discos
+## Disks
 
 ```text
-/          MicroSD 128 GB (antes 8 GB)
-/tmp       tmpfs (RAM) — peligroso en 1 GB si Calibre deja basura
-/media/admin/KINGSTON   USB 128 GB — epubs + biblioteca.db
+/          128 GB MicroSD (previously 8 GB)
+/tmp       tmpfs (RAM) — risky on 1 GB if Calibre leaves junk behind
+/media/admin/KINGSTON   128 GB USB — EPUBs + biblioteca.db
 ```
 
-Comprobar montaje del USB antes de dar por bueno el bot de biblioteca:
+Check that the USB drive is mounted before trusting the library bot:
 
 ```bash
 findmnt /media/admin/KINGSTON
@@ -50,11 +50,11 @@ df -h /media/admin/KINGSTON
 
 ## File Browser
 
-Sirve el USB y/o `/home/admin` en la LAN. Es el “disco duro online” de esta Pi: copiar, borrar y ver logs sin SSH. En 1 GB conviene no indexar árboles enormes a la vez que ffmpeg.
+Serves the USB drive and/or `/home/admin` on the LAN. It is this Pi's online disk: copy, delete, and read logs without SSH. On 1 GB, do not index huge trees at the same time as ffmpeg.
 
 ## zRAM
 
-Fichero `/etc/default/zramswap`:
+File `/etc/default/zramswap`:
 
 ```text
 ALGO=lz4
@@ -62,9 +62,9 @@ PERCENT=50
 PRIORITY=100
 ```
 
-Comprobar: `swapon --show` y `cat /sys/block/zram0/mm_stat`.
+Check with `swapon --show` and `cat /sys/block/zram0/mm_stat`.
 
-## Lo que no corre aquí
+## What does not run here
 
-- Ollama / Whisper local: no caben.
-- Imagen completa de la SD: se hacía desde el PC (ficheros `.img`), no con un timer en la Pi.
+- Local Ollama or Whisper: they do not fit.
+- A full SD card image: that was made from the PC (`.img` files), not by a timer on the Pi.
